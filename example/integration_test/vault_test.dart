@@ -32,6 +32,16 @@ void main() {
     final unlocked = await expectingMatch(() => vault.unlock(prompt: 'Sign in'));
     expect((unlocked as VaultSuccess<String>).value, 'kunci-perangkat');
 
+    if (Platform.isAndroid) {
+      // A cancelled re-store must leave the first secret in place (spec §6.1).
+      // ignore: avoid_print
+      print('DKV:CANCEL');
+      final replaced = await vault.store('vervanging', prompt: 'Turn on again');
+      expect((replaced as VaultError<void>).failure, VaultFailure.cancelled);
+      final kept = await expectingMatch(() => vault.unlock(prompt: 'Sign in'));
+      expect((kept as VaultSuccess<String>).value, 'kunci-perangkat');
+    }
+
     if (Platform.isIOS && const bool.fromEnvironment('DKV_ENROLMENT_AUTOMATED')) {
       // ignore: avoid_print
       print('DKV:REENROL');
