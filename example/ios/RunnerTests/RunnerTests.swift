@@ -11,14 +11,27 @@ import XCTest
 
 class RunnerTests: XCTestCase {
 
-  func testGetPlatformVersion() {
+  func testUnknownMethodIsNotImplemented() {
     let plugin = DeviceKeyVaultPlugin()
 
     let call = FlutterMethodCall(methodName: "getPlatformVersion", arguments: [])
 
     let resultExpectation = expectation(description: "result block must be called.")
     plugin.handle(call) { result in
-      XCTAssertEqual(result as! String, "iOS " + UIDevice.current.systemVersion)
+      XCTAssertTrue((result as AnyObject) === FlutterMethodNotImplemented)
+      resultExpectation.fulfill()
+    }
+    waitForExpectations(timeout: 1)
+  }
+
+  func testStoreWithoutArgumentsFails() {
+    let plugin = DeviceKeyVaultPlugin()
+
+    let call = FlutterMethodCall(methodName: "store", arguments: [:])
+
+    let resultExpectation = expectation(description: "result block must be called.")
+    plugin.handle(call) { result in
+      XCTAssertEqual((result as? FlutterError)?.code, "failed")
       resultExpectation.fulfill()
     }
     waitForExpectations(timeout: 1)

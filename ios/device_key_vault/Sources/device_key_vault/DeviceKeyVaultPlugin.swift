@@ -131,8 +131,14 @@ public class DeviceKeyVaultPlugin: NSObject, FlutterPlugin {
   // MARK: unlock
 
   private func unlock(prompt: String, result: @escaping FlutterResult) {
-    guard let marker = readMarker() else {
+    let read = readMarker()
+    if read.status == errSecItemNotFound {
       result(FlutterError(code: "not_found", message: nil, details: nil))
+      return
+    }
+    guard read.status == errSecSuccess, let marker = read.data else {
+      // Not a definite "nothing stored", so the slot is kept.
+      result(FlutterError(code: "failed", message: "keychain marker \(read.status)", details: nil))
       return
     }
     let context = LAContext()
@@ -197,7 +203,9 @@ public class DeviceKeyVaultPlugin: NSObject, FlutterPlugin {
     }
   }
 
-  private func readMarker() -> Data? {
+  /// The status comes back with the data so that only `errSecItemNotFound`
+  /// reads as "nothing stored".
+  private func readMarker() -> (status: OSStatus, data: Data?) {
     var item: CFTypeRef?
     let status = SecItemCopyMatching([
       kSecClass as String: kSecClassGenericPassword,
@@ -206,7 +214,7 @@ public class DeviceKeyVaultPlugin: NSObject, FlutterPlugin {
       kSecReturnData as String: true,
       kSecMatchLimit as String: kSecMatchLimitOne,
     ] as CFDictionary, &item)
-    return status == errSecSuccess ? (item as? Data) : nil
+    return (status, item as? Data)
   }
 
   /// Valid only after `canEvaluatePolicy` has run on this context.
