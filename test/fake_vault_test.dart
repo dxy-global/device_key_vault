@@ -54,4 +54,27 @@ void main() {
     expect(v.secret, 'k');
     expect(v.prompts, 1);
   });
+
+  test('biometrics refused to the app refuse unlock without prompting and keep the secret', () async {
+    final v = FakeDeviceKeyVault();
+    await v.store('k', prompt: 'on');
+    v.available = const VaultAvailability.unavailable(VaultUnavailableReason.notAllowed);
+    expect(((await v.unlock(prompt: 'in')) as VaultError<String>).failure, VaultFailure.unavailable);
+    expect(v.secret, 'k');
+    expect(v.prompts, 1, reason: 'only the store prompted');
+  });
+
+  test('an empty prompt fails store and unlock without prompting, as iOS would crash on it', () async {
+    final v = FakeDeviceKeyVault();
+    await v.store('k', prompt: 'on');
+    final stored = (await v.store('k2', prompt: '')) as VaultError<void>;
+    expect(stored.failure, VaultFailure.failed);
+    expect(stored.message, 'prompt must not be empty');
+    final unlocked = (await v.unlock(prompt: '  ')) as VaultError<String>;
+    expect(unlocked.failure, VaultFailure.failed);
+    expect(unlocked.message, 'prompt must not be empty');
+    expect(v.secret, 'k');
+    expect(v.prompts, 1, reason: 'only the first store prompted');
+    expect(v.promptTexts, ['on']);
+  });
 }

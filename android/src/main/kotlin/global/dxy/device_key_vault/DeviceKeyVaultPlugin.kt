@@ -20,6 +20,7 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import java.io.IOException
 import java.security.KeyStore
+import java.security.UnrecoverableKeyException
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
@@ -138,7 +139,12 @@ class DeviceKeyVaultPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, Act
      * missing or invalidated key is replaced now: what it guarded is lost anyway.
      */
     private fun encryptingCipher(): Cipher {
-        existingKey()?.let { key ->
+        val existing = try {
+            existingKey()
+        } catch (e: UnrecoverableKeyException) {
+            null // Some OEM builds throw this for a key an enrolment invalidated: replaced below, so turning the feature on again recovers.
+        }
+        existing?.let { key ->
             try {
                 return Cipher.getInstance(TRANSFORMATION).apply { init(Cipher.ENCRYPT_MODE, key) }
             } catch (e: KeyPermanentlyInvalidatedException) {

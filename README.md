@@ -10,13 +10,18 @@ One secret per app install, kept behind the phone's biometrics.
 
 ```dart
 const vault = DeviceKeyVault();
+const secret = 'device-key';
 final available = await vault.availability();
 if (available.isReady) {
-  final stored = await vault.store(key, prompt: 'Turn on Face ID');
-  final unlocked = await vault.unlock(prompt: 'Sign in');
-  switch (unlocked) {
-    case VaultSuccess(:final value): // use value
-    case VaultError(:final failure): // cancelled, invalidated, notFound, lockedOut, unavailable, failed
+  final stored = await vault.store(secret, prompt: 'Turn on Face ID');
+  if (stored is VaultSuccess) {
+    final unlocked = await vault.unlock(prompt: 'Sign in');
+    switch (unlocked) {
+      case VaultSuccess(:final value):
+        print(value);
+      case VaultError(:final failure): // cancelled, invalidated, notFound, lockedOut, unavailable, failed
+        print(failure);
+    }
   }
 }
 ```
@@ -28,6 +33,7 @@ Tests: `import 'package:device_key_vault/testing.dart';` gives `FakeDeviceKeyVau
 **Android**
 - `MainActivity` must extend `FlutterFragmentActivity`.
 - minSdk 24. Strong biometrics only (Class 3).
+- On Android 8.1 (API 27) and below, androidx.biometric draws its own fingerprint dialog, which needs an AppCompat theme: make the parent of both `LaunchTheme` and `NormalTheme` (in `res/values/styles.xml` and `res/values-night/styles.xml`) a `Theme.AppCompat` theme, e.g. `Theme.AppCompat.Light.NoActionBar` and `Theme.AppCompat.NoActionBar`.
 - A lockout is reported by `store` and `unlock` (`lockedOut`), not by `availability`: Android's `BiometricManager` has no public lockout status, so `availability` can say ready while the sensor is locked.
 
 **iOS**
@@ -65,3 +71,5 @@ On a real iPhone with Face ID and a real Android phone with a fingerprint reader
 6. Store, then remove every face or fingerprint in Settings: Availability: `unavailable notEnrolled`; Unlock: `error invalidated`, then `error notFound`.
 7. Store, then fail the biometric until the OS locks it (the prompt never offers the device passcode), then Unlock: `error lockedOut`.
 8. Store, then Store again and cancel that prompt: Unlock still returns the first value.
+9. On an Android 8.x phone (or an API 26/27 emulator), with the host's themes set as above: Store and Unlock show the fingerprint dialog without crashing.
+10. On an iPhone, deny the Face ID permission alert the first Store triggers: Availability: `unavailable notAllowed`; allow it again in Settings → the app → Face ID: Availability: `ready face`.

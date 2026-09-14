@@ -37,6 +37,7 @@ class FakeDeviceKeyVault implements DeviceKeyVault {
 
   @override
   Future<VaultResult<void>> store(String secret, {required String prompt}) async {
+    if (prompt.trim().isEmpty) return const VaultError(VaultFailure.failed, 'prompt must not be empty');
     if (!available.isReady) return VaultError(_refusal(available.reason!));
     prompts++;
     promptTexts.add(prompt);
@@ -50,6 +51,7 @@ class FakeDeviceKeyVault implements DeviceKeyVault {
 
   @override
   Future<VaultResult<String>> unlock({required String prompt}) async {
+    if (prompt.trim().isEmpty) return const VaultError(VaultFailure.failed, 'prompt must not be empty');
     if (_invalidated) {
       _invalidated = false;
       return const VaultError(VaultFailure.invalidated);

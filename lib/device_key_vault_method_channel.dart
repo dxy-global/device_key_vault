@@ -16,6 +16,8 @@ class MethodChannelDeviceKeyVault extends DeviceKeyVaultPlatform {
 
   @override
   Future<VaultResult<void>> store(String secret, {required String prompt}) async {
+    // iOS terminates the app when LocalAuthentication gets an empty reason.
+    if (prompt.trim().isEmpty) return const VaultError(VaultFailure.failed, 'prompt must not be empty');
     try {
       await methodChannel.invokeMethod<void>('store', {'secret': secret, 'prompt': prompt});
       return const VaultSuccess(null);
@@ -26,6 +28,7 @@ class MethodChannelDeviceKeyVault extends DeviceKeyVaultPlatform {
 
   @override
   Future<VaultResult<String>> unlock({required String prompt}) async {
+    if (prompt.trim().isEmpty) return const VaultError(VaultFailure.failed, 'prompt must not be empty');
     try {
       final secret = await methodChannel.invokeMethod<String>('unlock', {'prompt': prompt});
       if (secret == null) return const VaultError(VaultFailure.failed, 'no secret returned');

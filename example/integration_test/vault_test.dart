@@ -18,7 +18,9 @@ void main() {
     return op();
   }
 
-  testWidgets('store, unlock, invalidate on enrolment change, clear', (t) async {
+  testWidgets(
+      'store, unlock, clear; a cancelled re-store keeps the secret (Android); '
+      're-enrolment invalidates when automated (iOS)', (t) async {
     app.main();
     await t.pumpAndSettle();
     await vault.clear();

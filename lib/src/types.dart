@@ -3,7 +3,15 @@
 enum BiometricKind { face, fingerprint, iris, other }
 
 /// Why biometrics cannot be used right now.
-enum VaultUnavailableReason { noHardware, notEnrolled, lockedOut }
+enum VaultUnavailableReason {
+  noHardware,
+  notEnrolled,
+  lockedOut,
+
+  /// The person refused this app the use of biometrics (iOS Settings → the
+  /// app → Face ID). Only iOS reports it.
+  notAllowed,
+}
 
 class VaultAvailability {
   const VaultAvailability.ready(BiometricKind this.kind) : reason = null;
@@ -26,6 +34,7 @@ class VaultAvailability {
     return VaultAvailability.unavailable(switch (m['reason']) {
       'not_enrolled' => VaultUnavailableReason.notEnrolled,
       'locked_out' => VaultUnavailableReason.lockedOut,
+      'not_allowed' => VaultUnavailableReason.notAllowed,
       _ => VaultUnavailableReason.noHardware,
     });
   }

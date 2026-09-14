@@ -4,7 +4,7 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'device_key_vault'
-  s.version          = '0.0.1'
+  s.version          = '0.1.0'
   s.summary          = 'One secret per app, kept behind OS-enforced biometrics on iOS and Android, invalidated when enrolled biometrics change.'
   s.description      = <<-DESC
 One secret per app, kept behind OS-enforced biometrics on iOS and Android, invalidated when enrolled biometrics change.

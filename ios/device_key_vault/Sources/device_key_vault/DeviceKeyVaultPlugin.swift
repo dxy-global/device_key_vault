@@ -55,7 +55,7 @@ public class DeviceKeyVaultPlugin: NSObject, FlutterPlugin {
     if context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error) {
       return ["ready": true, "kind": kind(of: context), "reason": nil]
     }
-    return ["ready": false, "kind": nil, "reason": unavailableReason(error)]
+    return ["ready": false, "kind": nil, "reason": unavailableReason(error, context: context)]
   }
 
   private func kind(of context: LAContext) -> String {
@@ -68,11 +68,14 @@ public class DeviceKeyVaultPlugin: NSObject, FlutterPlugin {
     }
   }
 
-  private func unavailableReason(_ error: NSError?) -> String {
+  /// `context` is the one that ran `canEvaluatePolicy`, which sets its `biometryType`.
+  private func unavailableReason(_ error: NSError?, context: LAContext) -> String {
     guard let error = error, let code = LAError.Code(rawValue: error.code) else { return "no_hardware" }
     switch code {
     case .biometryNotEnrolled, .passcodeNotSet: return "not_enrolled"
     case .biometryLockout: return "locked_out"
+    // The sensor exists, so the person refused this app the use of it.
+    case .biometryNotAvailable where context.biometryType != .none: return "not_allowed"
     default: return "no_hardware"
     }
   }

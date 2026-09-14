@@ -40,6 +40,13 @@ void main() {
       expect(a.reason, VaultUnavailableReason.notEnrolled);
     });
 
+    test('biometrics refused to the app is a reason of its own', () async {
+      answer = (_) => {'ready': false, 'kind': null, 'reason': 'not_allowed'};
+      final a = await vault.availability();
+      expect(a.isReady, isFalse);
+      expect(a.reason, VaultUnavailableReason.notAllowed);
+    });
+
     test('an unknown kind or reason degrades, never crashes', () async {
       answer = (_) => {'ready': true, 'kind': 'retina-9000', 'reason': null};
       expect((await vault.availability()).kind, BiometricKind.other);
@@ -62,9 +69,25 @@ void main() {
       final r = await vault.store('s3cret', prompt: 'p');
       expect((r as VaultError<void>).failure, VaultFailure.cancelled);
     });
+
+    test('an empty prompt fails without calling the platform', () async {
+      answer = (_) => null;
+      final r = (await vault.store('s3cret', prompt: '')) as VaultError<void>;
+      expect(r.failure, VaultFailure.failed);
+      expect(r.message, 'prompt must not be empty');
+      expect(calls, isEmpty);
+    });
   });
 
   group('unlock', () {
+    test('a blank prompt fails without calling the platform', () async {
+      answer = (_) => 's3cret';
+      final r = (await vault.unlock(prompt: ' \n')) as VaultError<String>;
+      expect(r.failure, VaultFailure.failed);
+      expect(r.message, 'prompt must not be empty');
+      expect(calls, isEmpty);
+    });
+
     test('returns the secret', () async {
       answer = (_) => 's3cret';
       final r = await vault.unlock(prompt: 'Sign in');
