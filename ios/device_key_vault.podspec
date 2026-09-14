@@ -5,13 +5,13 @@
 Pod::Spec.new do |s|
   s.name             = 'device_key_vault'
   s.version          = '0.0.1'
-  s.summary          = 'A new Flutter plugin project.'
+  s.summary          = 'One secret per app, kept behind OS-enforced biometrics on iOS and Android, invalidated when enrolled biometrics change.'
   s.description      = <<-DESC
-A new Flutter plugin project.
+One secret per app, kept behind OS-enforced biometrics on iOS and Android, invalidated when enrolled biometrics change.
                        DESC
-  s.homepage         = 'http://example.com'
+  s.homepage         = 'https://github.com/dxy-global/device_key_vault'
   s.license          = { :file => '../LICENSE' }
-  s.author           = { 'Your Company' => 'email@example.com' }
+  s.author           = { 'dxy-global' => 'https://github.com/dxy-global' }
   s.source           = { :path => '.' }
   s.source_files = 'device_key_vault/Sources/device_key_vault/**/*'
   s.dependency 'Flutter'
