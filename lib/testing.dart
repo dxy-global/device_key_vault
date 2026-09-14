@@ -27,12 +27,17 @@ class FakeDeviceKeyVault implements DeviceKeyVault {
     _secret = null;
   }
 
+  /// What the platforms answer, before any prompt, when biometrics cannot be
+  /// used: a locked-out sensor is `lockedOut`; anything else is `unavailable`.
+  static VaultFailure _refusal(VaultUnavailableReason reason) =>
+      reason == VaultUnavailableReason.lockedOut ? VaultFailure.lockedOut : VaultFailure.unavailable;
+
   @override
   Future<VaultAvailability> availability() async => available;
 
   @override
   Future<VaultResult<void>> store(String secret, {required String prompt}) async {
-    if (!available.isReady) return const VaultError(VaultFailure.unavailable);
+    if (!available.isReady) return VaultError(_refusal(available.reason!));
     prompts++;
     promptTexts.add(prompt);
     final failure = nextStoreFailure;
@@ -50,7 +55,15 @@ class FakeDeviceKeyVault implements DeviceKeyVault {
       return const VaultError(VaultFailure.invalidated);
     }
     if (_secret == null) return const VaultError(VaultFailure.notFound);
-    if (!available.isReady) return const VaultError(VaultFailure.unavailable);
+    if (!available.isReady) {
+      if (available.reason == VaultUnavailableReason.notEnrolled) {
+        // Every face or finger was removed: on both platforms the stored
+        // secret is already unusable, and unlock clears the slot.
+        _secret = null;
+        return const VaultError(VaultFailure.invalidated);
+      }
+      return VaultError(_refusal(available.reason!));
+    }
     prompts++;
     promptTexts.add(prompt);
     final failure = nextUnlockFailure;
