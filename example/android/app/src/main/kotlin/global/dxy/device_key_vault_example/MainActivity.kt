@@ -1,5 +1,6 @@
 package global.dxy.device_key_vault_example
 
-import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterFragmentActivity
 
-class MainActivity : FlutterActivity()
+// BiometricPrompt needs a FragmentActivity. Every host app must do the same.
+class MainActivity : FlutterFragmentActivity()
