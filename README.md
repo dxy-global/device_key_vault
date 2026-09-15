@@ -48,9 +48,11 @@ Tests: `import 'package:device_key_vault/testing.dart';` gives `FakeDeviceKeyVau
 dependencies:
   device_key_vault:
     git:
-      url: git@github.com:dxy-global/device_key_vault.git
+      url: https://github.com/dxy-global/device_key_vault.git
       ref: v0.1.0
 ```
+
+The repo is public, so this needs no key or deploy key on any build machine.
 
 ## Working on it
 
